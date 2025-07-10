@@ -4,7 +4,8 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 
-app.use(express.static('public'));
+app.use('/arcade', express.static('public'))
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
