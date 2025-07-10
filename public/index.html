@@ -1,107 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Tic-Tac-Toe</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
+<html lang="zh-Hant">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SITCON Arcade</title>
+        <link rel="stylesheet" href="style.css" />
+        <meta name="theme-color" content="#1D1D1D" />
+        <script src="https://font.emtech.cc/emfont.js"></script>
+    </head>
+    <body class="emfont-TaipeiSansTC">
         <header>
-            <h1>Multiplayer Tic-Tac-Toe</h1>
+            <div class="container">
+                <nav>
+                    <a href="/" id="exit"><img src="exit.svg" alt="離開" /></a><a href="/login" id="login">登入</a>
+                    <div class="logged">
+                        <img src="" alt="" class="avatar" />
+                        <a href="/logout" id="logout">登出</a>
+                    </div>
+                </nav>
+                <h1 class="emfont-UnboundedSans">SITCON<span>ARCADE</span></h1>
+                <div class="about">
+                    <a href="/login" id="cfa">登入</a>
+                    <p>使用點數<br />與好友一起對戰</p>
+                </div>
+            </div>
         </header>
-        
-        <div id="auth-section">
-            <div class="auth-info">
-                <h2>🎮 SITCON Camp 2025 遊戲</h2>
-                <p>請使用 Telegram 帳號登入</p>
-                <div id="telegram-login">
-                    <div id="telegram-widget-container"></div>
-                    <div id="auth-loading" class="hidden">
-                        <div class="loading-spinner"></div>
-                        <p>正在驗證 Telegram 登入...</p>
+        <section id="rooms">
+            <h2 class="emfont-UnboundedSans">正在等待加入</h2>
+            <div class="room-container container">
+                <a class="room">
+                    <img src="" alt="" />
+                    <div>
+                        <div class="room-title">井字遊戲 - 50 點</div>
+                        <div class="room-initiator">房主</div>
+                    </div>
+                </a>
+                <a class="room">
+                    <img src="" alt="" />
+                    <div>
+                        <div class="room-title">井字遊戲 - 50 點</div>
+                        <div class="room-initiator">房主</div>
+                    </div> </a
+                ><a class="room">
+                    <img src="" alt="" />
+                    <div>
+                        <div class="room-title">井字遊戲 - 50 點</div>
+                        <div class="room-initiator">房主</div>
+                    </div> </a
+                ><a class="room">
+                    <img src="" alt="" />
+                    <div>
+                        <div class="room-title">井字遊戲 - 50 點</div>
+                        <div class="room-initiator">房主</div>
+                    </div> </a
+                ><a class="room">
+                    <img src="" alt="" />
+                    <div>
+                        <div class="room-title">井字遊戲 - 50 點</div>
+                        <div class="room-initiator">房主</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+        <section id="games" class="container">
+            <h2 class="emfont-UnboundedSans">遊戲列表</h2>
+            <div class="game-container">
+                <div class="game">
+                    <img src="tic-tac-toe.svg" alt="井字遊戲" />
+                    <div class="game-info">
+                        <div class="game-title">井字遊戲</div>
+                        <div class="game-description">經典的井字遊戲。</div>
+                        <a href="/tic-tac-toe" class="play-button">開始遊戲</a>
                     </div>
                 </div>
-                <div id="auth-error" class="hidden auth-error">
-                    <p></p>
-                </div>
-                <div class="auth-notice">
-                    <p>💡 登入前需要先用喵券機機器人註冊帳號</p>
-                </div>
-            </div>
-        </div>
-        
-        <div id="room-section" class="hidden">
-            <div class="user-info">
-                <div class="user-profile">
-                    <img id="user-photo" src="" alt="User" class="user-avatar">
-                    <div class="user-details">
-                        <span id="user-name"></span>
-                        <span id="user-username"></span>
+                <div class="game">
+                    <img src="tic-tac-toe.svg" alt="井字遊戲" />
+                    <div class="game-info">
+                        <div class="game-title">井字遊戲</div>
+                        <div class="game-description">經典的井字遊戲。</div>
+                        <a href="/tic-tac-toe" class="play-button">開始遊戲</a>
                     </div>
                 </div>
-                <button id="logout-btn">Logout</button>
-            </div>
-            <div class="room-controls">
-                <input type="text" id="room-input" placeholder="Enter room ID or leave blank for random">
-                <button id="join-btn">Join Room</button>
-                <button id="create-btn">Create Room</button>
-            </div>
-        </div>
-
-        <div id="game-section" class="hidden">
-            <div class="game-info">
-                <div class="player-info">
-                    <span>You are: <strong id="player-symbol"></strong></span>
-                    <span id="room-id-display"></span>
-                </div>
-                <div class="players-display">
-                    <div class="player-card" id="player-x">
-                        <img class="player-avatar" src="" alt="Player X">
-                        <div class="player-details">
-                            <span class="player-name"></span>
-                            <span class="player-symbol">X</span>
-                        </div>
-                    </div>
-                    <div class="vs-indicator">VS</div>
-                    <div class="player-card" id="player-o">
-                        <img class="player-avatar" src="" alt="Player O">
-                        <div class="player-details">
-                            <span class="player-name"></span>
-                            <span class="player-symbol">O</span>
-                        </div>
+                <div class="game">
+                    <img src="tic-tac-toe.svg" alt="井字遊戲" />
+                    <div class="game-info">
+                        <div class="game-title">井字遊戲</div>
+                        <div class="game-description">經典的井字遊戲。</div>
+                        <a href="/tic-tac-toe" class="play-button">開始遊戲</a>
                     </div>
                 </div>
-                <div class="game-status">
-                    <span id="status-text">Waiting for opponent...</span>
-                </div>
             </div>
-
-            <div class="game-board" id="game-board">
-                <div class="cell" data-index="0"></div>
-                <div class="cell" data-index="1"></div>
-                <div class="cell" data-index="2"></div>
-                <div class="cell" data-index="3"></div>
-                <div class="cell" data-index="4"></div>
-                <div class="cell" data-index="5"></div>
-                <div class="cell" data-index="6"></div>
-                <div class="cell" data-index="7"></div>
-                <div class="cell" data-index="8"></div>
-            </div>
-
-            <div class="game-controls">
-                <button id="restart-btn" class="hidden">Restart Game</button>
-                <button id="leave-btn">Leave Room</button>
-            </div>
-        </div>
-
-        <div id="message-area">
-            <div id="messages"></div>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
-</body>
+        </section>
+        <footer>
+            <p class="emfont-UnboundedSans">SITCON Camp 2025</p>
+        </footer>
+        <script>
+            emfont.init();
+        </script>
+    </body>
 </html>
