@@ -29,7 +29,6 @@ router.post("/play", (req, res) => {
 
             const roll = Math.floor(Math.random() * 10000);
             const isHigh = direction === "high";
-            console.log(isHigh);
             const win = isHigh ? roll > 10000 - parsedChance * 100 : roll < parsedChance * 100;
             const houseEdge = 0.4;
             const fairOdds = 100 / parsedChance;
