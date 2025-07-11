@@ -236,7 +236,7 @@
                 const fairOdds = 100 / chance.value;
                 const payout = bet.value * fairOdds * (1 - houseEdge);
                 document.querySelector(".bet-direction").innerHTML = `下注數字大於 ${10000 - Math.floor(chance.value * 100)} 或是小於 ${Math.floor(chance.value * 100)}<br>
-                如果贏的話你可以拿到 ${Math.round(payout)} 點`;
+                如果贏的話你可以拿到 ${Math.floor(payout)} 點`;
             };
 
             const adjustBet = factor => {
