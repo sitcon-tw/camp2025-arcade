@@ -5,7 +5,8 @@
         <title>點數翻倍機 | SITCON Arcade</title>
         <link rel="stylesheet" href="../base.css" />
         <script src="https://font.emtech.cc/emfont.js"></script>
-        <meta property="og:image" content="https://arcade.sitcon.pary/hi-lo/og.webp" />
+        <meta name="description" content="比數字大小，點數一次翻倍 48.5 倍！" />
+        <meta property="og:image" content="https://arcade.sitcon.party/arcade/hi-lo/og.webp" />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
@@ -150,8 +151,8 @@
             <button class="adjustBet" onclick="adjustBet('allIn')">All In</button>
             <button class="adjustBet" onclick="adjustBet('half')">1/2</button>
             <br />
-            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="2" max="98" /></label>
-            <input type="range" name="chanceRange" id="chanceRange" min="2" max="98" step="0.01" value="46" />
+            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="5" max="98" /></label>
+            <input type="range" name="chanceRange" id="chanceRange" min="5" max="98" step="0.01" value="46" />
             <p class="bet-direction">下注高或低:</p>
             <button class="bet" onclick="originalBet=bet.value;play('high')">賭大</button>
             <button class="bet" onclick="originalBet=bet.value;play('low')">賭小</button>
@@ -230,8 +231,8 @@
                 if (chance.value > 98) {
                     //chance.value = 98;
                 }
-                if (chance.value < 2) {
-                    chance.value = 2;
+                if (chance.value < 5) {
+                    chance.value = 5;
                 }
                 const houseEdge = 0.03;
                 const fairOdds = 100 / chance.value;

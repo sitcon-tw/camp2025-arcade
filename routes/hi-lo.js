@@ -26,6 +26,7 @@ router.post("/play", (req, res) => {
             balance = data.points;
             if (balance < parsedBet) return res.status(400).json({ error: "輸不起就別玩！" });
             if (isNaN(parsedBet) || parsedBet <= 0) return res.status(400).json({ error: "這什麼數字？" });
+             if ( parsedBet < 5) return res.status(400).json({ error: "你客家人？" });
 
             const roll = Math.floor(Math.random() * 10000);
             const isHigh = direction === "high";
