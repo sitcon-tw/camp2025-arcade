@@ -1,20 +1,21 @@
 {
-  "name": "multiplayer-tic-tac-toe",
-  "version": "1.0.0",
-  "description": "A multiplayer Tic-Tac-Toe game with WebSocket support",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "uuid": "^9.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
+    "name": "camp2025-arcade",
+    "version": "1.0.0",
+    "description": "SITCON Camp 2025 Arcade",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+    "type": "module",
+    "dependencies": {
+        "dotenv": "^16.6.1",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.2",
+        "socket.io": "^4.7.2",
+        "uuid": "^9.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.10"
+    }
 }

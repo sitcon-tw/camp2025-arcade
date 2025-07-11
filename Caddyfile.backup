@@ -1,0 +1,20 @@
+{
+    auto_https off
+}
+
+:80 {
+    @backend path /api* /docs* /openapi.json /redoc*
+    reverse_proxy @backend camp2025-backend.zeabur.internal:8000
+
+    @bot path /bot*
+    reverse_proxy @bot camp2025-bot.zeabur.internal:8080 {
+        trusted_proxies 10.42.0.0/24
+    }
+
+    @arcade path /arcade*
+    reverse_proxy @arcade camp2025-arcade.zeabur.internal:8080 {
+        trusted_proxies 10.42.0.0/24
+    }
+
+    reverse_proxy camp2025-frontend.zeabur.internal:8080
+}

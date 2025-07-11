@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zg-Hant">
+    <head>
+        <meta charset="UTF-8" />
+        <title>點數翻倍機 | SITCON Arcade</title>
+        <link rel="stylesheet" href="../base.css" />
+        <script src="https://font.emtech.cc/emfont.js"></script>
+        <meta property="og:image" content="https://arcade.sitcon.pary/hi-lo/og.webp" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                font-family: system-ui;
+                text-align: center;
+                padding: var(--padding);
+                background: #007a5c;
+                color: #e9efed;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                line-height: 1.33;
+            }
+            h1 {
+                margin-bottom: 0.8rem;
+            }
+            input,
+            button {
+                font-size: 1.2em;
+                margin: 0.5rem 0.2em;
+                padding: 0.4em;
+                font-family: inherit;
+            }
+            button {
+                cursor: pointer;
+            }
+            input {
+                width: 6rem;
+                background-color: #013b2b;
+                color: #feba00;
+                outline: transparent;
+                border: none;
+            }
+            #rollNumber {
+                font-size: 3.5em;
+                margin-block: 2rem 0.5rem;
+                font-family: monospace;
+            }
+            #result {
+                margin-bottom: 1rem;
+                height: 1rem;
+            }
+            .autoPlay {
+                display: block;
+            }
+            #autoPlay {
+                margin-right: 0;
+                width: unset;
+            }
+            p {
+                margin: 1rem 0;
+            }
+
+            .autoPlay {
+                cursor: pointer;
+            }
+            footer {
+                color: #02392b;
+            }
+
+            #rollNumber span {
+                display: inline-block;
+                padding: 0.2em 0.2em;
+                line-height: 1.2em;
+                border-radius: 0.2em;
+                background: linear-gradient(to bottom, #45484d 0%, #000000 100%);
+                margin: 0 0.1em;
+            }
+            .adjustBet {
+                background-color: #152f4d;
+                color: #fff;
+                border: none;
+                outline: transparent;
+                padding: 0.5em 1em;
+            }
+            .bet {
+                background: linear-gradient(to bottom, #f5cb08, #ebae08);
+                color: #483704;
+                border: none;
+                outline: transparent;
+            }
+            .adjustBet:hover,
+            .bet:hover {
+                filter: brightness(0.95);
+            }
+
+            .adjustBet:active,
+            .bet:active {
+                filter: brightness(0.9);
+            }
+        </style>
+    </head>
+    <body class="emfont-TaipeiSansTC">
+        <main>
+            <nav>
+                <a href="/arcade" id="exit" class="roundButton"><img src="../exit.svg" alt="離開" /></a
+                ><a href="https://camp.sitcon.party/telegram-login?redirectURL=/arcade" id="login" class="roundButton">登入</a>
+                <div class="logged">
+                    <div class="balance">20 點</div>
+                    <img src="" alt="" class="avatar" />
+                    <a id="logout" class="roundButton" class="roundButton">登出</a>
+                </div>
+            </nav>
+            <h1>🎲 點數翻倍機</h1>
+            <p>選擇一個贏的機率並下注高或低!</p>
+            <div id="rollNumber"><span>0</span><span>0</span><span>0</span><span>0</span></div>
+            <div id="result"></div>
+
+            <label>下注金額: <input type="number" id="bet" value="10" step="1" /></label>
+            <button class="adjustBet" onclick="adjustBet(2)">x2</button>
+            <button class="adjustBet" onclick="adjustBet(0.5)">÷2</button>
+            <br />
+            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="0.02" max="94.06" /></label>
+            <br />
+            <p class="bet-direction">下注高或低:</p>
+            <button class="bet" onclick="play('high')">下注高 🔼</button>
+            <button class="bet" onclick="play('low')">下注低 🔽</button>
+            <label class="autoPlay"><input type="checkbox" id="autoPlay" /> 自動連續下單</label>
+            <div class="none">你輸贏了!1234567890</div>
+        </main>
+        <footer class="emfont-UnboundedSans-min">SITCON Camp 2025</footer>
+
+        <script>
+            // get userToken from localStorage
+            emfont.init();
+            const userToken = localStorage.getItem("userToken");
+            const balanceElement = document.querySelector(".balance");
+            if (userToken) {
+                document.querySelector(".logged").style.display = "flex";
+                document.querySelector("#login").style.display = "none";
+                fetch("https://camp.sitcon.party/api/web/profile", {
+                    headers: {
+                        Authorization: `Bearer ${userToken}`,
+                    },
+                })
+                    .then(response => {
+                        if (response.status === 401) {
+                            logout();
+                            return Promise.reject("Unauthorized");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Handle user profile data
+                        balanceElement.innerHTML = `${data.points} 點`;
+                        // https://camp.sitcon.party/api/web/users/6632602362/avatar
+                        fetch(`https://camp.sitcon.party/api/web/users/${data.id}/avatar`, {
+                            headers: {
+                                Authorization: `Bearer ${userToken}`,
+                            },
+                        })
+                            .then(response => {
+                                if (response.status === 401) {
+                                    logout();
+                                    return Promise.reject("Unauthorized");
+                                }
+                                return response.json();
+                            })
+                            .then(data2 => {
+                                const avatar = document.querySelector(".avatar");
+                                avatar.src = data2.photo_url || "default-avatar.png";
+                                avatar.alt = data2.display_name || "User Avatar";
+                            })
+                            .catch(error => console.error("Error fetching avatar:", error));
+                    })
+                    .catch(error => console.error("Error fetching user profile:", error));
+            }
+
+            const logout = () => {
+                localStorage.removeItem("userToken");
+                window.location.reload();
+            };
+
+            document.querySelector("#logout").addEventListener("click", e => {
+                e.preventDefault();
+                logout();
+            });
+
+            // game
+
+            const bet = document.getElementById("bet");
+            const chance = document.getElementById("chance");
+            const autoPlay = document.getElementById("autoPlay");
+
+            const betDirectionUpdate = () => {
+                // if too large set back to 100
+                if (chance.value > 92) {
+                    chance.value = 92;
+                }
+                const houseEdge = 0.1;
+                const fairOdds = 100 / chance.value;
+                const payout = bet.value * fairOdds * (1 - houseEdge);
+                document.querySelector(".bet-direction").innerHTML = `下注數字大於 ${10000 - Math.floor(chance.value * 100)} 或是小於 ${Math.floor(chance.value * 100)}<br>
+                如果贏的話你可以拿到 ${Math.round(payout)} 點`;
+            };
+
+            const adjustBet = factor => {
+                const betInput = document.getElementById("bet");
+                betInput.value = Math.round(parseFloat(betInput.value) * factor);
+                betDirectionUpdate();
+            };
+
+            //  告訴他要猜高和低分別要多少才會贏
+            document.getElementById("chance").addEventListener("input", betDirectionUpdate);
+            document.getElementById("bet").addEventListener("input", betDirectionUpdate);
+
+            betDirectionUpdate();
+
+            async function play(direction) {
+                if (!userToken) {
+                    alert("請先登入！");
+                    return;
+                }
+
+                const betAmount = bet.value;
+                const winChance = chance.value;
+
+                let count = 0;
+                let result = null;
+                let speed = autoPlay.checked ? 10 : 30;
+                let interval = setInterval(() => {
+                    const randomNum = Math.floor(Math.random() * 10000);
+                    const num = randomNum.toString().padStart(4, "0");
+                    document.getElementById("rollNumber").innerHTML = num
+                        .split("")
+                        .map(digit => `<span>${digit}</span>`)
+                        .join("");
+                    if (++count > 15 && result) {
+                        clearInterval(interval);
+                        const resultNum = result.roll.toString().padStart(4, "0");
+                        document.getElementById("rollNumber").innerHTML = resultNum
+                            .split("")
+                            .map(digit => `<span>${digit}</span>`)
+                            .join("");
+                        document.getElementById("result").innerText = result.win ? `🎉 你贏了! +${result.payout}` : `💥 你輸了!`;
+                        balanceElement.innerHTML = `${result.balance} 點`;
+                    }
+                }, speed);
+
+                fetch("/arcade/hi-lo/play", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${userToken}`,
+                    },
+                    body: JSON.stringify({ betAmount, winChance }),
+                })
+                    .then(async res => {
+                        if (!res.ok) {
+                            const errorData = await res.json().catch(() => ({})); // 防止不是 JSON 的錯誤
+                            if (res.status === 401) {
+                                logout();
+                                throw new Error("未授權，請重新登入");
+                            } else if (res.status === 500) {
+                                throw new Error("伺服器錯誤：" + (errorData.error || "未知錯誤"));
+                            } else {
+                                throw new Error(errorData.error || "發生未知錯誤");
+                            }
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        result = data; // 這邊改成 const，避免不小心用了 global 變數
+                        if (autoPlay.checked) {
+                            setTimeout(() => {
+                                play(direction);
+                            }, 500);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("發生錯誤: " + error.message);
+                    });
+            }
+        </script>
+    </body>
+</html>
