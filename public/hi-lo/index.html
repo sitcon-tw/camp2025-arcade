@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zg-Hant">
+<html lang="zh-Hant">
     <head>
         <meta charset="UTF-8" />
         <title>點數翻倍機 | SITCON Arcade</title>
@@ -145,14 +145,14 @@
             <div id="rollNumber"><span>0</span><span>0</span><span>0</span><span>0</span></div>
             <div id="result"></div>
 
-            <label>下注金額: <input type="number" id="bet" value="1000" step="1" /></label>
+            <label>下注金額: <input type="number" id="bet" value="1000" min="5" step="1" /></label>
             <button class="adjustBet" onclick="adjustBet(2)">x2</button>
             <button class="adjustBet" onclick="adjustBet(0.5)">÷2</button>
             <button class="adjustBet" onclick="adjustBet('allIn')">All In</button>
             <button class="adjustBet" onclick="adjustBet('half')">1/2</button>
             <br />
-            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="5" max="98" /></label>
-            <input type="range" name="chanceRange" id="chanceRange" min="5" max="98" step="0.01" value="46" />
+            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="2" max="98" /></label>
+            <input type="range" name="chanceRange" id="chanceRange" min="2" max="98" step="0.01" value="46" />
             <p class="bet-direction">下注高或低:</p>
             <button class="bet" onclick="originalBet=bet.value;play('high')">賭大</button>
             <button class="bet" onclick="originalBet=bet.value;play('low')">賭小</button>
@@ -185,7 +185,6 @@
                     .then(data => {
                         // Handle user profile data
                         balanceElement.innerHTML = `${data.points} 點`;
-                        // https://camp.sitcon.party/api/web/users/6632602362/avatar
                         fetch(`https://camp.sitcon.party/api/web/users/${data.id}/avatar`, {
                             headers: {
                                 Authorization: `Bearer ${userToken}`,
@@ -207,7 +206,6 @@
                     })
                     .catch(error => console.error("Error fetching user profile:", error));
             }
-
             const logout = () => {
                 localStorage.removeItem("userToken");
                 window.location.reload();
@@ -249,11 +247,11 @@
                     return;
                 }
                 if (factor === "half") {
-                    betInput.value = Math.round(parseFloat(betInput.value) / 2);
+                    betInput.value = Math.max(Math.round(parseFloat(betInput.value) / 2), 5);
                     betDirectionUpdate();
                     return;
                 }
-                betInput.value = Math.round(parseFloat(betInput.value) * factor);
+                betInput.value = Math.max(Math.round(parseFloat(betInput.value) * factor), 5);
                 betDirectionUpdate();
             };
 
@@ -392,16 +390,6 @@
                     },
                 },
             });
-
-            // Make canvas full window size
-            // const resizeChart = () => {
-            //     document.getElementById("priceChart").style.width = window.innerWidth + "px";
-            //     console.log(ctx.canvas.width);
-            //     document.getElementById("priceChart").style.height = window.innerHeight + "px";
-            // };
-
-            // resizeChart();
-            // window.addEventListener("resize", resizeChart);
         </script>
     </body>
 </html>

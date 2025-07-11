@@ -11,7 +11,7 @@ router.post("/play", (req, res) => {
     if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
     const userToken = authHeader.split(" ")[1];
     let balance = 0;
-    fetch("https://camp.sitcon.party/api/web/profile", {
+    fetch(process.env.BACKEND_URL + "/api/web/profile", {
         headers: {
             Authorization: `Bearer ${userToken}`,
         },
@@ -36,7 +36,7 @@ router.post("/play", (req, res) => {
             // fetch /api/bot/arcade/add POST
             // Import dotenv at the top of your file
             const apiKey = process.env.CAMP_INTERNAL_API_KEY;
-            fetch("https://camp.sitcon.party/api/bot/arcade/points", {
+            fetch(process.env.BACKEND_URL + "/api/bot/arcade/points", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

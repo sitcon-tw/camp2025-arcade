@@ -11,7 +11,7 @@ router.post("/play", (req, res) => {
     if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
     const userToken = authHeader.split(" ")[1];
     let balance = 0;
-    fetch("https://camp.sitcon.party/api/web/profile", {
+    fetch(process.env.BACKEND_URL + "/api/web/profile", {
         headers: {
             Authorization: `Bearer ${userToken}`,
         },
@@ -39,7 +39,7 @@ router.post("/play", (req, res) => {
             const reply = { roll, win, payout: payout - parsedBet, balance: balance - parsedBet + (win ? payout : 0) };
             const amount = win ? payout - parsedBet : -parsedBet;
             if (!amount) return res.json(reply);
-            fetch("https://camp.sitcon.party/api/bot/arcade/points", {
+            fetch(process.env.BACKEND_URL + "/api/bot/arcade/points", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -64,6 +64,10 @@ router.post("/play", (req, res) => {
                     console.error("Error updating balance:", error);
                     return res.status(500).json({ error: "Internal server error" });
                 });
+        })
+        .catch(error => {
+            console.error("Error fetching profile:", error);
+            return res.status(500).json({ error: error.message || "Internal server error" });
         });
 });
 
