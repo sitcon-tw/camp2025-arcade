@@ -52,15 +52,23 @@
             .autoPlay {
                 display: block;
             }
-            #autoPlay {
-                margin-right: 0;
+            .autoMultiply {
+                display: none;
+            }
+            .autoPlay:has(input:checked) + .autoMultiply {
+                display: block;
+            }
+            #autoPlay,
+            #autoMultiply {
+                margin-right: 5px;
                 width: unset;
             }
             p {
                 margin: 1rem 0;
             }
 
-            .autoPlay {
+            .autoPlay,
+            .autoMultiply {
                 cursor: pointer;
             }
             footer {
@@ -97,6 +105,15 @@
             .bet:active {
                 filter: brightness(0.9);
             }
+            #chanceRange {
+                width: 100%;
+                max-width: 20rem;
+                margin: 0.5rem auto;
+                display: block;
+                background-color: red;
+            }
+
+            
         </style>
     </head>
     <body class="emfont-TaipeiSansTC">
@@ -119,12 +136,13 @@
             <button class="adjustBet" onclick="adjustBet(2)">x2</button>
             <button class="adjustBet" onclick="adjustBet(0.5)">÷2</button>
             <br />
-            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="0.02" max="94.06" /></label>
-            <br />
+            <label>贏的機率 (%): <input type="number" id="chance" value="46" min="0" max="92" /></label>
+            <input type="range" name="chanceRange" id="chanceRange" min="0" max="92" step="0.01" value="46" />
             <p class="bet-direction">下注高或低:</p>
-            <button class="bet" onclick="play('high')">下注高 🔼</button>
-            <button class="bet" onclick="play('low')">下注低 🔽</button>
-            <label class="autoPlay"><input type="checkbox" id="autoPlay" /> 自動連續下單</label>
+            <button class="bet" onclick="originalBet=bet.value;play('high')">下注高 🔼</button>
+            <button class="bet" onclick="originalBet=bet.value;play('low')">下注低 🔽</button>
+            <label class="autoPlay"><input type="checkbox" id="autoPlay" />自動連續下單</label>
+            <label class="autoMultiply"><input type="checkbox" id="autoMultiply" checked />輸的話加倍下單直到賺回</label>
             <div class="none">你輸贏了!1234567890</div>
         </main>
         <footer class="emfont-UnboundedSans-min">SITCON Camp 2025</footer>
@@ -190,9 +208,11 @@
             const bet = document.getElementById("bet");
             const chance = document.getElementById("chance");
             const autoPlay = document.getElementById("autoPlay");
+            const autoMultiply = document.getElementById("autoMultiply");
 
             const betDirectionUpdate = () => {
-                // if too large set back to 100
+                document.getElementById("chanceRange").value = chance.value;
+                // if too large set back to 92
                 if (chance.value > 92) {
                     chance.value = 92;
                 }
@@ -211,11 +231,16 @@
 
             //  告訴他要猜高和低分別要多少才會贏
             document.getElementById("chance").addEventListener("input", betDirectionUpdate);
+            document.getElementById("chanceRange").addEventListener("input", e => {
+                const chanceInput = document.getElementById("chance");
+                chanceInput.value = e.target.value;
+                betDirectionUpdate();
+            });
             document.getElementById("bet").addEventListener("input", betDirectionUpdate);
 
             betDirectionUpdate();
-
-            async function play(direction) {
+            let originalBet = bet.value;
+            const play = async direction => {
                 if (!userToken) {
                     alert("請先登入！");
                     return;
@@ -252,7 +277,7 @@
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${userToken}`,
                     },
-                    body: JSON.stringify({ betAmount, winChance }),
+                    body: JSON.stringify({ betAmount, winChance, direction }),
                 })
                     .then(async res => {
                         if (!res.ok) {
@@ -272,6 +297,9 @@
                         result = data; // 這邊改成 const，避免不小心用了 global 變數
                         if (autoPlay.checked) {
                             setTimeout(() => {
+                                if (autoMultiply.checked) {
+                                    bet.value = result.win ? originalBet : originalBet * 2;
+                                }
                                 play(direction);
                             }, 500);
                         }
@@ -280,7 +308,7 @@
                         console.error("Error:", error);
                         alert("發生錯誤: " + error.message);
                     });
-            }
+            };
         </script>
     </body>
 </html>

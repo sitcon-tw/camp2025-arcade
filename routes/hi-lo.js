@@ -16,7 +16,12 @@ router.post("/play", (req, res) => {
             Authorization: `Bearer ${userToken}`,
         },
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Profile API responded with status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             balance = data.points;
             if (balance < parsedBet) return res.status(400).json({ error: "輸不起就別玩！" });
@@ -24,14 +29,14 @@ router.post("/play", (req, res) => {
 
             const roll = Math.floor(Math.random() * 10000);
             const isHigh = direction === "high";
-            const win = isHigh ? roll < parsedChance * 100 : roll > 10000 - parsedChance * 100;
+            console.log(isHigh);
+            const win = isHigh ? roll > 10000 - parsedChance * 100 : roll < parsedChance * 100;
             const houseEdge = 0.1;
             const fairOdds = 100 / parsedChance;
             const payout = Math.round(parsedBet * fairOdds * (1 - houseEdge));
             // fetch /api/bot/arcade/add POST
             // Import dotenv at the top of your file
             const apiKey = process.env.CAMP_INTERNAL_API_KEY;
-            console.log("API Key:", apiKey);
             fetch("https://camp.sitcon.party/api/bot/arcade/points", {
                 method: "POST",
                 headers: {
