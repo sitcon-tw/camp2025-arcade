@@ -26,13 +26,11 @@ const toSend = (user, amount, win) => {
             pending = false;
         }, 5000);
     }
-    console.log(amount, toSendList[user]);
 };
 
 const sendAll = () => {
     const users = Object.keys(toSendList);
     for (const user of users) {
-        console.log("sending to", user, toSendList[user]);
         const data = toSendList[user];
         delete toSendList[user];
         delete tokenToUser[data.token];
@@ -99,7 +97,6 @@ router.post("/play", async (req, res) => {
         }
     }
     const userID = tokenToUser[userToken];
-    console.log("User ID:", userID);
     balance = toSendList[userID].balance;
     if (balance < parsedBet) return res.status(400).json({ error: "輸不起就別玩！" });
     if (isNaN(parsedBet) || parsedBet <= 0) return res.status(400).json({ error: "這什麼數字？" });
