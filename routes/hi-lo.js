@@ -31,12 +31,15 @@ router.post("/play", (req, res) => {
             const isHigh = direction === "high";
             console.log(isHigh);
             const win = isHigh ? roll > 10000 - parsedChance * 100 : roll < parsedChance * 100;
-            const houseEdge = 0.1;
+            const houseEdge = 0.03;
             const fairOdds = 100 / parsedChance;
             const payout = Math.round(parsedBet * fairOdds * (1 - houseEdge));
             // fetch /api/bot/arcade/add POST
             // Import dotenv at the top of your file
             const apiKey = process.env.CAMP_INTERNAL_API_KEY;
+            const reply = { roll, win, payout: payout - parsedBet, balance: balance - parsedBet + (win ? payout : 0) };
+            const amount = win ? payout - parsedBet : -parsedBet;
+            if (!amount) res.json(reply);
             fetch("https://camp.sitcon.party/api/bot/arcade/points", {
                 method: "POST",
                 headers: {
@@ -45,7 +48,7 @@ router.post("/play", (req, res) => {
                 },
                 body: JSON.stringify({
                     from_user: data.id,
-                    amount: win ? payout : -parsedBet,
+                    amount,
                     game_type: "hi-lo",
                     note: "點數翻倍機 - " + (win ? "贏" : "輸"),
                 }),
@@ -56,7 +59,7 @@ router.post("/play", (req, res) => {
                         console.error("API Error:", response.status, errorData);
                         return res.status(response.status).json({ error: errorData.message || "Failed to update balance" });
                     }
-                    res.json({ roll, win, payout: payout, balance: balance - parsedBet + (win ? payout : 0) });
+                    res.json(reply);
                 })
                 .catch(error => {
                     console.error("Error updating balance:", error);
