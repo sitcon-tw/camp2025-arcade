@@ -134,12 +134,13 @@
             <button class="adjustBet" onclick="adjustBet(2)">x2</button>
             <button class="adjustBet" onclick="adjustBet(0.5)">÷2</button>
             <button class="adjustBet" onclick="adjustBet('allIn')">All In</button>
+            <button class="adjustBet" onclick="adjustBet('half')">1/2</button>
             <br />
             <label>贏的機率 (%): <input type="number" id="chance" value="46" min="0" max="92" /></label>
             <input type="range" name="chanceRange" id="chanceRange" min="0" max="92" step="0.01" value="46" />
             <p class="bet-direction">下注高或低:</p>
-            <button class="bet" onclick="originalBet=bet.value;play('high')">下注高 🔼</button>
-            <button class="bet" onclick="originalBet=bet.value;play('low')">下注低 🔽</button>
+            <button class="bet" onclick="originalBet=bet.value;play('high')">賭大</button>
+            <button class="bet" onclick="originalBet=bet.value;play('low')">賭小</button>
             <label class="autoPlay"><input type="checkbox" id="autoPlay" />自動連續下單</label>
             <label class="autoMultiply"><input type="checkbox" id="autoMultiply" checked />輸的話加倍下單直到賺回</label>
             <div class="none">你輸贏了!1234567890</div>
@@ -215,7 +216,7 @@
                 if (chance.value > 92) {
                     chance.value = 92;
                 }
-                const houseEdge = 0.1;
+                const houseEdge = 0.4;
                 const fairOdds = 100 / chance.value;
                 const payout = bet.value * fairOdds * (1 - houseEdge);
                 document.querySelector(".bet-direction").innerHTML = `下注數字大於 ${10000 - Math.floor(chance.value * 100)} 或是小於 ${Math.floor(chance.value * 100)}<br>
@@ -226,6 +227,11 @@
                 const betInput = document.getElementById("bet");
                 if (factor === "allIn") {
                     betInput.value = balanceElement.innerText.split(" ")[0]; // get current balance
+                    betDirectionUpdate();
+                    return;
+                }
+                if (factor === "half") {
+                    betInput.value = Math.round(parseFloat(betInput.value) / 2);
                     betDirectionUpdate();
                     return;
                 }
@@ -285,6 +291,7 @@
                 })
                     .then(async res => {
                         if (!res.ok) {
+                            clearInterval(interval);
                             const errorData = await res.json().catch(() => ({})); // 防止不是 JSON 的錯誤
                             if (res.status === 401) {
                                 logout();
@@ -309,6 +316,7 @@
                         }
                     })
                     .catch(error => {
+                        clearInterval(interval);
                         console.error("Error:", error);
                         alert("發生錯誤: " + error.message);
                     });

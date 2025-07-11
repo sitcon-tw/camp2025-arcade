@@ -107,7 +107,6 @@
                     .then(response => response.json())
                     .then(data => {
                         // Handle user profile data
-                        console.log("User profile:", data);
                         // https://camp.sitcon.party/api/web/users/6632602362/avatar
                         fetch(`https://camp.sitcon.party/api/web/users/${data.id}/avatar`, {
                             headers: {
