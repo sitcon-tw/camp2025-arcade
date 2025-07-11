@@ -39,7 +39,7 @@ router.post("/play", (req, res) => {
             const apiKey = process.env.CAMP_INTERNAL_API_KEY;
             const reply = { roll, win, payout: payout - parsedBet, balance: balance - parsedBet + (win ? payout : 0) };
             const amount = win ? payout - parsedBet : -parsedBet;
-            if (!amount) res.json(reply);
+            if (!amount) return res.json(reply);
             fetch("https://camp.sitcon.party/api/bot/arcade/points", {
                 method: "POST",
                 headers: {
