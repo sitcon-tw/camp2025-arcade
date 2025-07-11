@@ -112,8 +112,6 @@
                 display: block;
                 background-color: red;
             }
-
-            
         </style>
     </head>
     <body class="emfont-TaipeiSansTC">
@@ -132,9 +130,10 @@
             <div id="rollNumber"><span>0</span><span>0</span><span>0</span><span>0</span></div>
             <div id="result"></div>
 
-            <label>下注金額: <input type="number" id="bet" value="10" step="1" /></label>
+            <label>下注金額: <input type="number" id="bet" value="1000" step="1" /></label>
             <button class="adjustBet" onclick="adjustBet(2)">x2</button>
             <button class="adjustBet" onclick="adjustBet(0.5)">÷2</button>
+            <button class="adjustBet" onclick="adjustBet('allIn')">All In</button>
             <br />
             <label>贏的機率 (%): <input type="number" id="chance" value="46" min="0" max="92" /></label>
             <input type="range" name="chanceRange" id="chanceRange" min="0" max="92" step="0.01" value="46" />
@@ -225,6 +224,11 @@
 
             const adjustBet = factor => {
                 const betInput = document.getElementById("bet");
+                if (factor === "allIn") {
+                    betInput.value = balanceElement.innerText.split(" ")[0]; // get current balance
+                    betDirectionUpdate();
+                    return;
+                }
                 betInput.value = Math.round(parseFloat(betInput.value) * factor);
                 betDirectionUpdate();
             };
