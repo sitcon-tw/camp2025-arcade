@@ -1,0 +1,311 @@
+<!documentTYPE html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="UTF-8" />
+        <title>投硬幣</title>
+        <link rel="stylesheet" href="../base.css" />
+        <script src="https://font.emtech.cc/emfont.js"></script>
+        <meta name="description" content="比數字大小，點數一次翻倍 48.5 倍！" />
+        <meta property="og:image" content="https://camp.sitcon.party/arcade/flip/og.webp" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="stylesheet" href="style.css" />
+        <style>
+            body {
+                background-color: #1a2c38;
+            }
+
+            main.container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                padding: var(--padding);
+            }
+
+            #config {
+                background-color: #213743;
+                padding: 2rem;
+                height: 100%;
+                width: 20rem;
+                max-width: 100%;
+            }
+
+            .right {
+                flex-grow: 1;
+                background-color: #0e212e;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            .coin-container {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            button,
+            input {
+                display: block;
+                background-color: #304553;
+                color: #fff;
+                border: none;
+                outline: transparent;
+                padding: 1rem 1rem;
+                border-radius: 0.25rem;
+                font-family: inherit;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.2);
+                font-size: 1.1rem;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 0.5rem;
+                color: #b1bad3;
+            }
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+            }
+
+            button {
+                cursor: pointer;
+                transition: filter 0.2s ease-in-out;
+            }
+
+            .both {
+                display: flex;
+                gap: 0.5rem;
+            }
+            .both button {
+                flex: 1;
+            }
+
+            .heads {
+                background-color: rgb(28, 69, 247, 0.7);
+            }
+
+            .tails {
+                background-color: rgba(247, 138, 29, 0.7);
+            }
+
+            .cashout {
+                background-color: rgb(0, 231, 0, 0.7);
+            }
+            button:hover {
+                filter: brightness(1.2);
+            }
+
+            button:active {
+                filter: brightness(0.9);
+            }
+
+            .config-item {
+                margin-top: 1rem;
+            }
+
+            .history {
+                background-color: #213743;
+                margin: 1rem;
+                padding: 1rem;
+                border-radius: 0.25rem;
+            }
+
+            .history h2 {
+                color: #b1bad3;
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .record {
+                background-color: #081c2a;
+                display: grid;
+                border-radius: 0.25rem;
+                grid-template-columns: repeat(20, 1fr);
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .record div {
+                background-color: #0e212e;
+                width: 0.8rem;
+                height: 0.8rem;
+                border-radius: 0.25rem;
+            }
+
+            .record .heads {
+                background-color: #ffa202;
+            }
+            .record .tails {
+                background-color: #5083ff;
+            }
+
+            .betting .rand,
+            .betting .heads,
+            .betting .tails,
+            .betting .income {
+                pointer-events: none;
+                opacity: 0.3;
+            }
+
+            .betting .cashout {
+                display: none;
+            }
+
+            .betting .cashout.bet {
+                display: block;
+            }
+
+            @media (max-width: 600px) {
+                main.container {
+                    flex-direction: column;
+                    padding: unset;
+                }
+                .container > section {
+                    width: 100%;
+                    height: unset !important;
+                }
+                #config {
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body class="emfont-TaipeiSansTC betting">
+        <main class="container">
+            <section id="config">
+                <h1>投硬幣</h1>
+                <p>20 點</p>
+                <div class="config-item">
+                    <label for="bet">下注金額</label>
+                    <input type="number" id="bet" value="10" min="10" />
+                </div>
+                <div class="config-item income">
+                    <label for="current">目前收入（x1.96）</label>
+                    <input type="text" id="current" value="30" disabled />
+                </div>
+                <button class="flip-button rand" onclick="flip('rand')">隨機面</button>
+                <div class="both">
+                    <button class="flip-button heads" onclick="flip('heads')">正面</button>
+                    <button class="flip-button tails" onclick="flip('tails')">反面</button>
+                </div>
+                <button class="flip-button cashout" onclick="cashout()">出金</button>
+                <button class="flip-button cashout bet" onclick="bet()">下注</button>
+            </section>
+            <section class="right">
+                <div class="coin-container">
+                    <div class="floor">
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                        <div class="line"></div>
+                    </div>
+                    <div class="coin">
+                        <div class="edge">
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                            <div class="segment"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="history">
+                    <h2>歷史紀錄</h2>
+                    <div class="record">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script>
+            emfont.init();
+            let flippin = false,
+                income = 0,
+                round = 0;
+            let currentBet = 0;
+            document.body.classList.add("betting");
+
+            const history = document.querySelectorAll(".record div");
+            let objs = document.querySelectorAll(".line, .coin");
+            const flip = e => {
+                if (flippin || document.body.classList.contains("betting")) return;
+                flippin = true;
+                objs.forEach(line => line.classList.remove("anim"));
+
+                let winner = Math.random() > 0.5 ? "heads" : "tails";
+                console.log(winner);
+                let deg = winner == "heads" ? "720deg" : "900deg";
+                let rand = e === "rand" ? (Math.random() > 0.5 ? "heads" : "tails") : e;
+                document.querySelector(":root").style.setProperty("--flips", deg);
+                setTimeout(() => {
+                    objs.forEach(line => line.classList.add("anim"));
+                    setTimeout(() => {
+                        history[round].classList.add(winner);
+                        flippin = false;
+                        round++;
+                    }, 1000);
+                }, 50);
+            };
+
+            setTimeout(() => document.querySelector(".coin").click(), 750);
+
+            const bet = () => {
+                if (flippin || !document.body.classList.contains("betting")) return;
+                if (currentBet < 10) {
+                    alert("下注金額不能小於 10 點");
+                    return;
+                }
+                if (point < currentBet) {
+                    alert("收入不足，請先出金");
+                    return;
+                }
+                document.body.classList.remove("betting");
+                currentBet = parseInt(document.querySelector("#bet").value);
+            };
+        </script>
+    </body>
+</html>
