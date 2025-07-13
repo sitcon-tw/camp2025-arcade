@@ -8,6 +8,8 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js"></script>
         <meta property="og:image" content="https://camp.sitcon.party/arcade/point/og.webp" />
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
         <style>
             body {
                 font-family: "Arial", sans-serif;
@@ -317,7 +319,7 @@
                                     },
                                 },
                                 y: {
-                                    // max: 350000,
+                                     max: 200000,
                                     title: {
                                         display: true,
                                         text: "餘額",
@@ -362,6 +364,28 @@
                                         label: function (context) {
                                             return context.dataset.label + ": " + context.parsed.y.toLocaleString();
                                         },
+                                    },
+                                },
+                                zoom: {
+                                    pan: {
+                                        enabled: true, // 啟用拖曳
+                                        mode: "xy", // 可同時左右和上下平移
+                                        overScaleMode: "xy", // 確保 x 和 y 都能平移
+                                        threshold: 10, // 拖動幾 px 才觸發
+                                    },
+                                    zoom: {
+                                        wheel: {
+                                            enabled: true, // 滑鼠滾輪縮放
+                                            speed:0.1
+                                        },
+                                        pinch: {
+                                            enabled: true, // 觸控裝置雙指縮放
+                                        },
+                                        mode: "xy", // x, y 都可以縮放
+                                    },
+                                    limits: {
+                                        x: { min: "original", max: "original" },
+                                        y: { min: 0, max: "original" }, // y 軸從 0 開始
                                     },
                                 },
                             },
