@@ -7,7 +7,6 @@
         <script src="https://font.emtech.cc/emfont.js"></script>
         <meta name="description" content="比數字大小，點數一次翻倍 48.5 倍！" />
         <meta property="og:image" content="https://camp.sitcon.party/arcade/flip/og.webp" />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="stylesheet" href="style.css" />
@@ -31,6 +30,7 @@
                 height: 100%;
                 width: 20rem;
                 max-width: 100%;
+                position: relative;
             }
 
             .right {
@@ -39,6 +39,7 @@
                 height: 100%;
                 display: flex;
                 flex-direction: column;
+                padding-top: 1rem;
             }
             .coin-container {
                 flex: 1;
@@ -124,11 +125,14 @@
 
             .record {
                 background-color: #081c2a;
-                display: grid;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                justify-content: space-between;
                 border-radius: 0.25rem;
-                grid-template-columns: repeat(20, 1fr);
                 gap: 0.5rem;
                 padding: 0.5rem;
+                max-width: 100%;
             }
 
             .record div {
@@ -144,21 +148,59 @@
             .record .tails {
                 background-color: #5083ff;
             }
+            .record .heads,
+            .record .tails {
+                width: 1rem;
+                height: 1rem;
+                border-radius: 50%;
+            }
 
             .betting .rand,
             .betting .heads,
             .betting .tails,
-            .betting .income {
+            .betting .income,
+            #bet {
                 pointer-events: none;
                 opacity: 0.3;
             }
 
-            .betting .cashout {
+            .betting .cash,
+            .bet {
+                display: none;
+            }
+            .betting .bet {
+                display: block;
+            }
+            .betting #bet {
+                pointer-events: auto;
+                opacity: 1;
+            }
+            #profile,
+            #login {
+                display: block;
+                position: absolute;
+                top: 1.5rem;
+                right: 1rem;
+            }
+
+            #login {
+                padding: 0.7rem 1rem;
+                background-color: #304553;
+            }
+
+            #profile {
+                width: 3rem;
+                height: 3rem;
+                border-radius: 50%;
+                background-color: #0e212e;
                 display: none;
             }
 
-            .betting .cashout.bet {
+            #profile.logged {
                 display: block;
+            }
+            #profile.logged + #login {
+                display: none;
             }
 
             @media (max-width: 600px) {
@@ -179,22 +221,24 @@
     <body class="emfont-TaipeiSansTC betting">
         <main class="container">
             <section id="config">
+                <img id="profile" />
+                <a id="login" href="https://camp.sitcon.party/telegram-login?redirectURL=/arcade/flip">登入</a>
                 <h1>投硬幣</h1>
-                <p>20 點</p>
+                <p class="balance">20 點</p>
                 <div class="config-item">
                     <label for="bet">下注金額</label>
-                    <input type="number" id="bet" value="10" min="10" />
+                    <input type="number" id="bet" value="10" min="0" />
                 </div>
                 <div class="config-item income">
                     <label for="current">目前收入（x1.96）</label>
-                    <input type="text" id="current" value="30" disabled />
+                    <input type="text" id="current" value="0" disabled />
                 </div>
                 <button class="flip-button rand" onclick="flip('rand')">隨機面</button>
                 <div class="both">
                     <button class="flip-button heads" onclick="flip('heads')">正面</button>
                     <button class="flip-button tails" onclick="flip('tails')">反面</button>
                 </div>
-                <button class="flip-button cashout" onclick="cashout()">出金</button>
+                <button class="flip-button cashout cash" onclick="cashout()">出金</button>
                 <button class="flip-button cashout bet" onclick="bet()">下注</button>
             </section>
             <section class="right">
@@ -263,48 +307,168 @@
         </main>
         <script>
             emfont.init();
+
             let flippin = false,
                 income = 0,
                 round = 0;
             let currentBet = 0;
+            let point = 0;
             document.body.classList.add("betting");
 
             const history = document.querySelectorAll(".record div");
             let objs = document.querySelectorAll(".line, .coin");
-            const flip = e => {
+            const current = document.querySelector("#current");
+
+            const flip = side => {
                 if (flippin || document.body.classList.contains("betting")) return;
+                document.body.classList.add("betting");
                 flippin = true;
                 objs.forEach(line => line.classList.remove("anim"));
+                let rand = side === "rand" ? (Math.random() > 0.5 ? "heads" : "tails") : side;
+                fetch("/arcade/flip/play", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+                    },
+                    body: JSON.stringify({
+                        bet: currentBet,
+                        side,
+                        round,
+                    }),
+                })
+                    .then(response => {
+                        if (response.status === 401) {
+                            alert("請先登入");
+                            window.location.href = "https://camp.sitcon.party/telegram-login?redirectURL=/arcade/flip";
+                            return Promise.reject("Unauthorized");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        let winner = data.winner;
+                        console.log(winner);
+                        let deg = winner == "heads" ? "720deg" : "900deg";
+                        document.querySelector(":root").style.setProperty("--flips", deg);
+                        setTimeout(() => {
+                            objs.forEach(line => line.classList.add("anim"));
+                            setTimeout(() => {
+                                if (winner === rand) {
+                                    current.innerHTML = `目前收入（x${Math.min(currentBet * 1.96)} 點）`;
+                                    currentBet *= 2;
+                                    income = Math.floor(currentBet * 1.96);
+                                    history[round].classList.add(winner);
+                                    flippin = false;
+                                    round++;
+                                } else {
+                                    income = 0;
+                                    point -= currentBet;
+                                }
 
-                let winner = Math.random() > 0.5 ? "heads" : "tails";
-                console.log(winner);
-                let deg = winner == "heads" ? "720deg" : "900deg";
-                let rand = e === "rand" ? (Math.random() > 0.5 ? "heads" : "tails") : e;
-                document.querySelector(":root").style.setProperty("--flips", deg);
-                setTimeout(() => {
-                    objs.forEach(line => line.classList.add("anim"));
-                    setTimeout(() => {
-                        history[round].classList.add(winner);
-                        flippin = false;
-                        round++;
-                    }, 1000);
-                }, 50);
+                                document.body.classList.remove("betting");
+                            }, 1000);
+                        }, 50);
+                        document.querySelector(".balance").innerHTML = `${point} 點`;
+                    })
+                    .catch(error => console.error("Error:", error));
             };
 
             setTimeout(() => document.querySelector(".coin").click(), 750);
 
             const bet = () => {
                 if (flippin || !document.body.classList.contains("betting")) return;
-                if (currentBet < 10) {
-                    alert("下注金額不能小於 10 點");
+                if (!currentBet) {
+                    currentBet = parseInt(document.querySelector("#bet").value);
+                    if (currentBet < 10) {
+                        alert("下注金額不能小於 10 點");
+                        return;
+                    }
+                    if (point < currentBet) {
+                        alert("收入不足，請先出金");
+                        return;
+                    }
+                    document.body.classList.remove("betting");
+                    current.value = 0;
+                }
+            };
+
+            // login
+            const logout = () => {
+                localStorage.removeItem("userToken");
+                window.location.reload();
+            };
+
+            const userToken = localStorage.getItem("userToken");
+            const balanceElement = document.querySelector(".balance");
+            if (userToken) {
+                document.querySelector("#profile").classList.add("logged");
+                fetch("https://camp.sitcon.party/api/web/profile", {
+                    headers: {
+                        Authorization: `Bearer ${userToken}`,
+                    },
+                })
+                    .then(response => {
+                        if (response.status === 401) {
+                            logout();
+                            return Promise.reject("Unauthorized");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Handle user profile data
+                        point = data.points || 0;
+                        balanceElement.innerHTML = `${point} 點`;
+                        fetch(`https://camp.sitcon.party/api/web/users/${data.id}/avatar`, {
+                            headers: {
+                                Authorization: `Bearer ${userToken}`,
+                            },
+                        })
+                            .then(response => {
+                                if (response.status === 401) {
+                                    logout();
+                                    return Promise.reject("Unauthorized");
+                                }
+                                return response.json();
+                            })
+                            .then(data2 => {
+                                const avatar = document.querySelector("#profile");
+                                avatar.src = data2.photo_url || "default-avatar.png";
+                                avatar.alt = data2.display_name || "User Avatar";
+                            })
+                            .catch(error => console.error("Error fetching avatar:", error));
+                    })
+                    .catch(error => console.error("Error fetching user profile:", error));
+            }
+
+            const cashout = () => {
+                if (flippin || !document.body.classList.contains("betting")) return;
+                if (currentBet) {
+                    alert("請先下注");
                     return;
                 }
-                if (point < currentBet) {
-                    alert("收入不足，請先出金");
-                    return;
-                }
-                document.body.classList.remove("betting");
-                currentBet = parseInt(document.querySelector("#bet").value);
+                fetch("/arcade/flip/cashout", {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${userToken}`,
+                    },
+                })
+                    .then(response => {
+                        if (response.status === 401) {
+                            logout();
+                            return Promise.reject("Unauthorized");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        point += data.points || 0;
+                        balanceElement.innerHTML = `${point} 點`;
+                        currentBet = 0;
+                        current.value = 0;
+                        income = 0;
+                        round = 0;
+                        history.forEach(div => div.classList.remove("heads", "tails"));
+                    })
+                    .catch(error => console.error("Error:", error));
             };
         </script>
     </body>

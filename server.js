@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import hiLo from "./routes/hi-lo.js";
+import flip from "./routes/flip.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -9,6 +10,7 @@ const server = http.createServer(app);
 
 app.use(express.json());
 app.use("/arcade/hi-lo", hiLo);
+app.use("/arcade/flip", flip);
 
 // 目前的連線遊戲狀態
 let gameData = [

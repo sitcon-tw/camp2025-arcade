@@ -131,7 +131,6 @@ h2 {
 .game {
     background-color: #29282f;
     border-radius: 1rem;
-    overflow: hidden;
 }
 .game-info {
     width: min(90vw, 18rem);

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Balance Leaderboard</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js"></script>
+        <meta property="og:image" content="https://camp.sitcon.party/arcade/point/og.webp" />
+        <style>
+            body {
+                font-family: "Arial", sans-serif;
+                margin: 0;
+                padding: 20px;
+                background: #038fdb;
+                min-height: 100vh;
+                color: white;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 30px;
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+                font-size: 2.5em;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .chart-container {
+                position: relative;
+                height: 500px;
+                margin-bottom: 30px;
+                border-radius: 15px;
+                padding: 20px;
+            }
+
+            .stats {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 20px;
+                flex-wrap: wrap;
+            }
+
+            .stat-card {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 20px;
+                border-radius: 15px;
+                text-align: center;
+                min-width: 150px;
+                margin: 10px;
+                backdrop-filter: blur(5px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: transform 0.3s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .stat-card h3 {
+                margin: 0 0 10px 0;
+                font-size: 1.2em;
+                color: #fff;
+            }
+
+            .stat-card p {
+                margin: 0;
+                font-size: 1.8em;
+                font-weight: bold;
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            }
+
+            .王賦禮 {
+                color: #ff6b6b;
+            }
+            .蘇奇彬 {
+                color: #4ecdc4;
+            }
+            .bar {
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>點數趨勢圖</h1>
+            <div class="bar">
+                <input type="radio" name="show" id="personal" value="personal" checked />
+                <label for="personal">個人</label>
+                <input type="radio" name="show" id="group" value="group" />
+                <label for="group">組別</label>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="balanceChart"></canvas>
+            </div>
+
+            <div class="stats" id="statsContainer">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <script>
+            let chart = null;
+            const load = () => {
+                async function loadDataFromCSV() {
+                    const selectedValue = document.querySelector('input[name="show"]:checked')?.value;
+
+                    const response = await fetch(selectedValue + ".csv");
+                    const csvText = await response.text();
+
+                    // 分行，排除標題列
+                    const lines = csvText.trim().split("\n");
+                    const header = lines.shift().split(",");
+
+                    // 找到欄位 index，避免硬編號，這樣欄位位置變也不怕
+                    // const timeIdx = header.indexOf("時間");
+                    // const userIdx = header.indexOf("用戶名稱");
+                    // const balanceIdx = header.indexOf("餘額");
+                    const timeIdx = 0;
+                    const userIdx = 1;
+                    const balanceIdx = 2;
+
+                    // 解析資料
+                    const data = lines.map(line => {
+                        const cols = line.split(",");
+                        return {
+                            time: cols[timeIdx],
+                            user: cols[userIdx],
+                            balance: Number(cols[balanceIdx]), // 限制餘額最大值為 1000000
+                        };
+                    });
+
+                    return data;
+                }
+
+                // 工人名單
+                const staffList = [
+                    "竺原",
+                    "柴柴",
+                    "康喔",
+                    "OnCloud",
+                    "pU",
+                    "!Tony2100",
+                    "毛哥EM",
+                    "KoukeNeko",
+                    "Windless",
+                    "Denny Huang",
+                    "阿公",
+                    "Arnoldsky",
+                    "Leaf",
+                    "皮蛋",
+                    "Fearnot",
+                    "Lindy",
+                    "yimang",
+                    "兆翌",
+                    "花椰",
+                    "秋刀魚",
+                    "章魚",
+                    "開根號",
+                    "雞心",
+                    "Henry",
+                    "kiki",
+                    "OsGa",
+                    "咪路",
+                    "滷味",
+                    "Leo",
+                    "好冷",
+                    "Ak",
+                    "ffting",
+                    "小徐",
+                    "TC",
+                    "xiung",
+                    "蓋蓋",
+                    "末夜",
+                    "萊姆",
+                    "Ya",
+                    "77",
+                    "Yuto",
+                    "小婕",
+                    "Sam",
+                    "阿玉",
+                    "Wolf Yuan",
+                    "13",
+                    "阿六",
+                    "宸",
+                    "庭",
+                    "橘子",
+                    "Mina",
+                    "Yuan",
+                    "亨",
+                    "海鷗",
+                    "EHDW",
+                    "Kevin",
+                    "Nelson",
+                    "Panda",
+                    "Ricky",
+                    "Yoru",
+                    "Yuki",
+                    "紀錄資訊組",
+                    "財庶務行政銷組",
+                    "隊輔設計組",
+                    "課活組",
+                    "編輯組",
+                ];
+                // 使用範例
+                loadDataFromCSV().then(rawData => {
+                    // Parse and organize data
+                    function parseData(data) {
+                        const userMap = new Map();
+
+                        data.forEach(entry => {
+                            // skip and return if is staff
+                            if (staffList.includes(entry.user)) {
+                                return;
+                            }
+
+                            // Parse the Chinese date format
+                            const timeStr = entry.time.replace("上午", " AM").replace("下午", " PM");
+                            const time = moment(timeStr, "YYYY/MM/DD A hh:mm:ss");
+
+                            if (!userMap.has(entry.user)) {
+                                userMap.set(entry.user, []);
+                            }
+
+                            userMap.get(entry.user).push({
+                                time: time.toDate(),
+                                balance: entry.balance,
+                            });
+                        });
+
+                        // Sort by time for each user
+                        userMap.forEach((entries, user) => {
+                            entries.sort((a, b) => a.time - b.time);
+                        });
+
+                        return userMap;
+                    }
+
+                    const userData = parseData(rawData);
+
+                    // Create chart
+                    const ctx = document.getElementById("balanceChart").getContext("2d");
+                    if (chart) {
+                        chart.destroy();
+                    }
+
+                    // const colors = {
+                    //     王賦禮: "#ff6b6b",
+                    //     蘇奇彬: "#4ecdc4",
+                    // };
+                    let i = 0;
+                    const datasets = [];
+                    userData.forEach((entries, user) => {
+                        i += 360 / 51;
+                        const h = Math.floor(Math.random() * 360); // Hue: 0-359
+                        const s = Math.floor(Math.random() * 51) + 50; // Saturation: 50-100%
+                        const l = Math.floor(Math.random() * 50) + 20;
+                        const randomColor = `hsl(${h}, ${s}%, ${l}%)`;
+                        datasets.push({
+                            label: user,
+                            data: entries.map(entry => ({
+                                x: entry.time,
+                                y: entry.balance,
+                            })),
+                            borderColor: randomColor,
+                            // backgroundColor: randomColor + "20",
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: randomColor,
+                            pointBorderColor: "#fff",
+                            pointBorderWidth: 1,
+                            tension: 0.3,
+                            fill: false,
+                        });
+                    });
+
+                    chart = new Chart(ctx, {
+                        type: "line",
+                        data: {
+                            datasets: datasets,
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    type: "time",
+                                    time: {
+                                        unit: "hour",
+                                        displayFormats: {
+                                            hour: "MM/DD HH:mm",
+                                        },
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: "時間",
+                                        color: "#fff",
+                                        font: {
+                                            size: 14,
+                                            weight: "bold",
+                                        },
+                                    },
+                                    ticks: {
+                                        color: "#fff",
+                                    },
+                                    grid: {
+                                        color: "rgba(255, 255, 255, 0.1)",
+                                    },
+                                },
+                                y: {
+                                    // max: 350000,
+                                    title: {
+                                        display: true,
+                                        text: "餘額",
+                                        color: "#fff",
+                                        font: {
+                                            size: 14,
+                                            weight: "bold",
+                                        },
+                                    },
+                                    ticks: {
+                                        color: "#fff",
+                                        callback: function (value) {
+                                            return value.toLocaleString();
+                                        },
+                                    },
+                                    grid: {
+                                        color: "rgba(255, 255, 255, 0.1)",
+                                    },
+                                },
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: "top",
+                                    labels: {
+                                        color: "#fff",
+                                        font: {
+                                            size: 14,
+                                            weight: "bold",
+                                        },
+                                        usePointStyle: true,
+                                        pointStyle: "circle",
+                                    },
+                                },
+                                tooltip: {
+                                    backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                    titleColor: "#fff",
+                                    bodyColor: "#fff",
+                                    borderColor: "#fff",
+                                    borderWidth: 1,
+                                    callbacks: {
+                                        label: function (context) {
+                                            return context.dataset.label + ": " + context.parsed.y.toLocaleString();
+                                        },
+                                    },
+                                },
+                            },
+                            interaction: {
+                                intersect: true,
+                                mode: "nearest",
+                            },
+                            elements: {
+                                point: {
+                                    hoverBorderWidth: 3,
+                                    borderColor: "red", // transparent
+                                    borderWidth: 0,
+                                },
+                            },
+                        },
+                    });
+
+                    // Generate stats
+                    function generateStats() {
+                        const statsContainer = document.getElementById("statsContainer");
+                        statsContainer.innerHTML = ""; // Clear previous stats
+                        userData.forEach((entries, user) => {
+                            const latestBalance = entries[entries.length - 1].balance;
+                            const firstBalance = entries[0].balance;
+                            const change = latestBalance - firstBalance;
+                            const changePercent = ((change / firstBalance) * 100).toFixed(1);
+
+                            const statCard = document.createElement("div");
+                            statCard.className = "stat-card";
+                            statCard.innerHTML = `
+                    <h3>${user}</h3>
+                    <p class="${user}">$${latestBalance.toLocaleString()}</p>
+                    <small>變化: ${change >= 0 ? "+" : ""}${change.toLocaleString()} (${changePercent}%)</small>
+                `;
+                            statsContainer.appendChild(statCard);
+                        });
+                    }
+
+                    generateStats();
+                });
+            };
+
+            load();
+            document.querySelectorAll('input[name="show"]').forEach(input => {
+                input.addEventListener("change", load);
+            });
+        </script>
+    </body>
+</html>
