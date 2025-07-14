@@ -376,7 +376,7 @@
                                     zoom: {
                                         wheel: {
                                             enabled: true, // 滑鼠滾輪縮放
-                                            speed:0.1
+                                            speed:0.01
                                         },
                                         pinch: {
                                             enabled: true, // 觸控裝置雙指縮放
@@ -385,7 +385,7 @@
                                     },
                                     limits: {
                                         x: { min: "original", max: "original" },
-                                        y: { min: 0, max: "original" }, // y 軸從 0 開始
+                                        y: { min: 0 }, // y 軸從 0 開始
                                     },
                                 },
                             },
